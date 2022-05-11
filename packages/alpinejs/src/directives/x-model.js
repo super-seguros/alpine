@@ -32,6 +32,16 @@ directive('model', (el, { modifiers, expression }, { effect, cleanup }) => {
     if (! el._x_removeModelListeners) el._x_removeModelListeners = {}
     el._x_removeModelListeners['default'] = removeListener
 
+    // Set model to current value if readonly
+    if (modifiers.includes("readonly")) {
+        evaluateAssignment(() => {}, {
+            scope: {
+                $event: { target: el },
+                rightSideOfExpression: assigmentFunction,
+            }
+        })
+    }
+
     cleanup(() => el._x_removeModelListeners['default']())
 
     // Allow programmatic overiding of x-model.
@@ -60,6 +70,9 @@ directive('model', (el, { modifiers, expression }, { effect, cleanup }) => {
     }
 
     effect(() => {
+        // Never update the value in readonly mode
+        if (modifiers.includes("readonly")) return
+
         // Don't modify the value of the input if it's focused.
         if (modifiers.includes('unintrusive') && document.activeElement.isSameNode(el)) return
 
